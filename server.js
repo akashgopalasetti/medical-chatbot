@@ -1,51 +1,45 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const path = require("path");
 require("dotenv").config();
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; // ✅ Dynamic port for Railway
 
+// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ Serve static files
-app.use(express.static(path.join(__dirname)));
+// ✅ Serve static frontend files if index.html is in root
+app.use(express.static("."));
 
-// ✅ Serve index.html at "/"
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
-
-// ✅ Handle POST requests for medical advice
+// ✅ Gemini API setup (make sure GEMINI_API_KEY is set in Railway Variables)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-app.post("/medical-advice", async (req, res) => {
-  const { text } = req.body;
-  if (!text) {
-    return res.status(400).json({ error: "Missing patient problem description" });
-  }
-
+// Sample route (you can modify this as per your chatbot logic)
+app.post("/generate", async (req, res) => {
   try {
-    const model = genAI.getGenerativeModel({ model: "models/gemini-2.5-pro" });
-    const prompt = `
-You are a helpful and professional medical assistant.
-Given the following patient's problem description, suggest possible medical remedies or next steps they can take.
-Be clear and professional, and remind them to see a doctor for severe or persistent symptoms.
-Patient's description: ${text}
-    `;
+    const { prompt } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({ error: "Prompt is required." });
+    }
+
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     const result = await model.generateContent(prompt);
-    const advice = result.response.text();
-    res.json({ advice });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to generate medical advice" });
+    const response = await result.response;
+    const text = response.text();
+
+    res.json({ response: text });
+  } catch (error) {
+    console.error("Error generating content:", error);
+    res.status(500).json({ error: "Failed to generate content" });
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+// Start server
+app.listen(PORT, () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });
