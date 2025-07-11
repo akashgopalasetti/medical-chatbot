@@ -1,17 +1,26 @@
- 
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const path = require("path");
 require("dotenv").config();
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
 
+// ✅ Serve static frontend files
+app.use(express.static(path.join(__dirname)));
+
+// ✅ Serve index.html at "/"
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+// ✅ Handle POST requests for medical advice
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 app.post("/medical-advice", async (req, res) => {
@@ -19,6 +28,7 @@ app.post("/medical-advice", async (req, res) => {
   if (!text) {
     return res.status(400).json({ error: "Missing patient problem description" });
   }
+
   try {
     const model = genAI.getGenerativeModel({ model: "models/gemini-2.5-pro" });
     const prompt = `
