@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Medical Chatbot by Team 2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      transition: background-color 0.3s, color 0.3s;
+      background: url('https://www.transparenttextures.com/patterns/diagnosis.png'), linear-gradient(to right, #e0f7fa, #ffffff);
+      background-size: cover;
+    }
+    .dark-mode {
+      background-color: #1a202c;
+      color: #f7fafc;
+      background: url('https://www.transparenttextures.com/patterns/diagnosis.png'), linear-gradient(to right, #2c3e50, #4a5568);
+    }
+    .dark-mode .card {
+      background-color: #2d3748;
+      color: #f7fafc;
+    }
+    .dark-mode .text-primary {
+      color: #cbd5e0;
+    }
+    .card {
+      background-color: #ffffff;
+      color: #1a202c;
+      transition: background-color 0.3s, color 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mx-auto px-4 py-6">
+    <div class="fixed top-4 right-4">
+      <button id="theme-toggle" class="p-2 rounded-full bg-gray-200">
+        <span id="theme-icon">🌞</span>
+      </button>
+    </div>
+
+    <header class="text-center mb-6">
+      <h1 class="text-3xl sm:text-4xl font-bold mb-2">Medical Chatbot by Team 2</h1>
+      <p class="text-base sm:text-lg text-primary max-w-2xl mx-auto">Describe your symptoms or health problem and get advice tailored to you.</p>
+    </header>
+
+    <div class="max-w-3xl mx-auto card rounded-xl shadow p-6 animate-pulse">
+      <textarea id="input-text" class="w-full h-40 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Describe your symptoms here..."></textarea>
+      <div class="mt-4 text-right">
+        <button id="get-advice-btn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Get Advice</button>
+      </div>
+    </div>
+
+    <div id="result-section" class="max-w-3xl mx-auto mt-6 card rounded-xl shadow p-6 hidden">
+      <h2 class="text-xl font-semibold mb-3">Suggested Remedy</h2>
+      <div id="advice-text" class="text-primary whitespace-pre-wrap"></div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("get-advice-btn").addEventListener("click", async () => {
+      const text = document.getElementById("input-text").value.trim();
+      if (!text) {
+        alert("Please describe your symptoms.");
+        return;
+      }
+
+      const btn = document.getElementById("get-advice-btn");
+      btn.disabled = true;
+      btn.textContent = "Getting advice...";
+
+      try {
+        const response = await fetch("http://localhost:3000/medical-advice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Unknown error");
+
+        document.getElementById("advice-text").textContent = data.advice;
+        document.getElementById("result-section").classList.remove("hidden");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to get advice. Check console for details.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Get Advice";
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const themeToggle = document.getElementById("theme-toggle");
+      const themeIcon = document.getElementById("theme-icon");
+
+      themeToggle.addEventListener("click", function () {
+        document.body.classList.toggle("dark-mode");
+
+        if (document.body.classList.contains("dark-mode")) {
+          themeIcon.textContent = "🌙";
+        } else {
+          themeIcon.textContent = "🌞";
+        }
+      });
+    });
+  </script>
+</body>
+</html>
