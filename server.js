@@ -12,7 +12,7 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ Serve static frontend files
+// ✅ Serve static files
 app.use(express.static(path.join(__dirname)));
 
 // ✅ Serve index.html at "/"
